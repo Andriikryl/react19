@@ -1,11 +1,20 @@
 // import { use, useState } from "react"
 
+import { Suspense, use, useState } from "react";
+import { createUser, fetchUsers } from "../../shared/api";
+
 type User = {
   id: string;
   email: string;
 };
 
+const deafaulUsersPromise = fetchUsers()
+
 export function UsersPage() {
+  const [usersPromise, setUsersPromise] = useState(deafaulUsersPromise)
+  const refetchUsers = () => {
+    setUsersPromise(fetchUsers())
+  }
   return (
     <section>
       <div>
@@ -13,45 +22,46 @@ export function UsersPage() {
         <hr />
       </div>
       <div className="flex flex-col">
-        <CreateUserForm />
+        <CreateUserForm refetchUsers={refetchUsers} />
         <hr />
         <div>
+          <Suspense fallback={<div>Loading....</div>}>
           <UserList
-            users={[
-              {
-                id: "1",
-                email: "1@example.com",
-              },
-              {
-                id: "2",
-                email: "2@example.com",
-              },
-              {
-                id: "3",
-                email: "3@example.com",
-              },
-              {
-                id: "4",
-                email: "4@example.com",
-              },
-            ]}
+          usersPromise={usersPromise}
           />
+          </Suspense>
         </div>
       </div>
     </section>
   );
 }
 
-export function CreateUserForm() {
+export function CreateUserForm({refetchUsers} : {refetchUsers: () => void}) {
+  const [email, setEmail] = useState("")
+
+  const hendeleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+   await createUser({
+      email,
+      id: crypto.randomUUID()
+    })
+    refetchUsers()
+    setEmail("")
+  }
+
   return (
-    <form action="">
-      <input type="email" />
+    <form action="" onSubmit={hendeleSubmit}>
+      <input type="email" 
+        value={email} 
+        onChange={(e) => setEmail(e.target.value)}
+      />
       <button>submit</button>
     </form>
   );
 }
 
-export function UserList({ users }: { users: User[] }) {
+export function UserList({ usersPromise }: { usersPromise: Promise<User[]> }) {
+  const users = use(usersPromise)
   return (
     <ul>
       {users.map((user) => {

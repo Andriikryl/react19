@@ -1,4 +1,13 @@
 {
-    "tasks": [],
-    "users": []
+  "tasks": [],
+  "users": [
+    {
+      "id": "8a51166b-0c0c-418c-a5ec-e4742eeeb0ce",
+      "email": ""
+    },
+    {
+      "id": "6420157e-2930-4cc6-8815-b82f9d20c868",
+      "email": "sadasd@asd.com"
+    }
+  ]
 }
