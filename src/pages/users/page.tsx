@@ -15,6 +15,9 @@ export function UsersPage() {
     setEmail("")
   }
 
+  const hendleDelete = (id: string) => {
+    setUsers(lastUser => lastUser.filter(user => user.id !== id))
+  }
 
   return (
     <section>
@@ -35,7 +38,12 @@ export function UsersPage() {
       <ul>
         {users.map((user) => {
           return (
-            <li key={user.id}>{user.email}</li>
+            <li key={user.id}>
+            <span>
+              {user.email}
+            </span>
+            <button type="button" onClick={() => hendleDelete(user.id)}>delete</button>
+            </li>
           )
         })}
       </ul>
