@@ -1,6 +1,6 @@
 
 
-export default function TodoListPage() {
+export function TodoListPage() {
     return (
       <div>users</div>
     )
