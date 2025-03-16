@@ -1,24 +1,11 @@
-import { useState } from "react"
+// import { use, useState } from "react"
 
 type User = {
-  id: string,
-  email: string,
-}
+  id: string;
+  email: string;
+};
 
 export function UsersPage() {
-  const [users, setUsers] = useState<User[]>([])
-  const [email, setEmail] = useState("")
-
-  const heandelSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setUsers([...users, {id: crypto.randomUUID(), email}]);
-    setEmail("")
-  }
-
-  const hendleDelete = (id: string) => {
-    setUsers(lastUser => lastUser.filter(user => user.id !== id))
-  }
-
   return (
     <section>
       <div>
@@ -26,27 +13,59 @@ export function UsersPage() {
         <hr />
       </div>
       <div className="flex flex-col">
-        <form onSubmit={heandelSubmit} action="">
-          <input type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          />
-          <button>submit</button>
-        </form>
+        <CreateUserForm />
         <hr />
+        <div>
+          <UserList
+            users={[
+              {
+                id: "1",
+                email: "1@example.com",
+              },
+              {
+                id: "2",
+                email: "2@example.com",
+              },
+              {
+                id: "3",
+                email: "3@example.com",
+              },
+              {
+                id: "4",
+                email: "4@example.com",
+              },
+            ]}
+          />
+        </div>
       </div>
-      <ul>
-        {users.map((user) => {
-          return (
-            <li key={user.id}>
-            <span>
-              {user.email}
-            </span>
-            <button type="button" onClick={() => hendleDelete(user.id)}>delete</button>
-            </li>
-          )
-        })}
-      </ul>
     </section>
-  )
+  );
+}
+
+export function CreateUserForm() {
+  return (
+    <form action="">
+      <input type="email" />
+      <button>submit</button>
+    </form>
+  );
+}
+
+export function UserList({ users }: { users: User[] }) {
+  return (
+    <ul>
+      {users.map((user) => {
+        return <UserCard user={user} key={user.id} />;
+      })}
+    </ul>
+  );
+}
+
+export function UserCard({ user }: { user: User }) {
+  return (
+    <li>
+      <span>{user.email}</span>
+      <button type="button">delete</button>
+    </li>
+  );
 }
