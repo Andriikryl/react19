@@ -1,6 +1,12 @@
-
+import { Routes, Route } from "react-router";
+fetch("http://localhost:3001/users").then((res) => {
+  console.log(res);
+});
 export default function App() {
   return (
-    <div className=" mt-[20px]">app</div>
-  )
+    <Routes>
+      <Route path="/" />
+      <Route path="/:userId/tasks"/>
+    </Routes>
+  );
 }
