@@ -8,7 +8,7 @@ import App from './app'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
      <BrowserRouter>
-     <div>asd</div>
+     <div >asd</div>
         <App/>
      </BrowserRouter>
   </StrictMode>,

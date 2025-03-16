@@ -1,6 +1,6 @@
 // import { use, useState } from "react"
 
-import { Suspense, use, useState } from "react";
+import { Suspense, use, useState, useTransition } from "react";
 import { createUser, fetchUsers } from "../../shared/api";
 
 type User = {
@@ -16,7 +16,7 @@ export function UsersPage() {
     setUsersPromise(fetchUsers())
   }
   return (
-    <section>
+    <section className="">
       <div>
         <h1 className="">Users page</h1>
         <hr />
@@ -27,6 +27,7 @@ export function UsersPage() {
         <div>
           <Suspense fallback={<div>Loading....</div>}>
           <UserList
+          refetchUsers={refetchUsers}
           usersPromise={usersPromise}
           />
           </Suspense>
@@ -38,40 +39,46 @@ export function UsersPage() {
 
 export function CreateUserForm({refetchUsers} : {refetchUsers: () => void}) {
   const [email, setEmail] = useState("")
+  const [isPending, startTransition] = useTransition()
 
   const hendeleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-   await createUser({
-      email,
-      id: crypto.randomUUID()
+    startTransition(async () => {
+      await createUser({
+         email,
+         id: crypto.randomUUID()
+       })
+       startTransition(() => {
+         refetchUsers()
+         setEmail("")
+       })
     })
-    refetchUsers()
-    setEmail("")
   }
 
   return (
     <form action="" onSubmit={hendeleSubmit}>
       <input type="email" 
         value={email} 
+        disabled={isPending}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <button>submit</button>
+      <button disabled={isPending} className="disabled:bg-gray-400">submit</button>
     </form>
   );
 }
 
-export function UserList({ usersPromise }: { usersPromise: Promise<User[]> }) {
+export function UserList({ usersPromise, refetchUsers }: { usersPromise: Promise<User[]>, refetchUsers: () => void  }) {
   const users = use(usersPromise)
   return (
     <ul>
       {users.map((user) => {
-        return <UserCard user={user} key={user.id} />;
+        return <UserCard user={user} key={user.id} refetchUsers={refetchUsers} />;
       })}
     </ul>
   );
 }
 
-export function UserCard({ user }: { user: User }) {
+export function UserCard({ user }: { user: User, refetchUsers: () => void }) {
   return (
     <li>
       <span>{user.email}</span>
