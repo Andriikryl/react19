@@ -1,20 +1,20 @@
 // import { use, useState } from "react"
-
-import { Suspense, use, useState, useTransition } from "react";
-import { createUser, fetchUsers } from "../../shared/api";
+import { startTransition, Suspense, use, useActionState, useState, useTransition } from "react";
+import { createUser, deleteUser, fetchUsers } from "../../shared/api";
+import {ErrorBoundary} from "react-error-boundary"
+import { createUserAction } from "./actions";
 
 type User = {
   id: string;
   email: string;
 };
 
-const deafaulUsersPromise = fetchUsers()
+const deafaulUsersPromise = fetchUsers();
 
 export function UsersPage() {
-  const [usersPromise, setUsersPromise] = useState(deafaulUsersPromise)
-  const refetchUsers = () => {
-    setUsersPromise(fetchUsers())
-  }
+  const [usersPromise, setUsersPromise] = useState(deafaulUsersPromise);
+  const refetchUsers = () =>
+    startTransition(() => setUsersPromise(fetchUsers()));
   return (
     <section className="">
       <div>
@@ -25,64 +25,88 @@ export function UsersPage() {
         <CreateUserForm refetchUsers={refetchUsers} />
         <hr />
         <div>
-          <Suspense fallback={<div>Loading....</div>}>
-          <UserList
-          refetchUsers={refetchUsers}
-          usersPromise={usersPromise}
-          />
-          </Suspense>
+          <ErrorBoundary fallback={<div>Somthing vent vrong</div>}>
+            <Suspense fallback={<div>Loading....</div>}>
+              <UserList
+                refetchUsers={refetchUsers}
+                usersPromise={usersPromise}
+              />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       </div>
     </section>
   );
 }
 
-export function CreateUserForm({refetchUsers} : {refetchUsers: () => void}) {
-  const [email, setEmail] = useState("")
-  const [isPending, startTransition] = useTransition()
+export function CreateUserForm({ refetchUsers }: { refetchUsers: () => void }) {
+  const [email, setEmail] = useState("");
+
+  const [state, dispatch, isPending] = useActionState(createUserAction({refetchUsers, setEmail}),{})
 
   const hendeleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      await createUser({
-         email,
-         id: crypto.randomUUID()
-       })
-       startTransition(() => {
-         refetchUsers()
-         setEmail("")
-       })
-    })
-  }
+      dispatch({email})
+    });
+  };
 
   return (
     <form action="" onSubmit={hendeleSubmit}>
-      <input type="email" 
-        value={email} 
+      <input
+        type="email"
+        value={email}
         disabled={isPending}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <button disabled={isPending} className="disabled:bg-gray-400">submit</button>
+      <button disabled={isPending} className="disabled:bg-gray-400">
+        submit
+      </button>
+      {state.error && <div>{state.error}</div>}
     </form>
   );
 }
 
-export function UserList({ usersPromise, refetchUsers }: { usersPromise: Promise<User[]>, refetchUsers: () => void  }) {
-  const users = use(usersPromise)
+export function UserList({
+  usersPromise,
+  refetchUsers,
+}: {
+  usersPromise: Promise<User[]>;
+  refetchUsers: () => void;
+}) {
+  const users = use(usersPromise);
   return (
     <ul>
       {users.map((user) => {
-        return <UserCard user={user} key={user.id} refetchUsers={refetchUsers} />;
+        return (
+          <UserCard user={user} key={user.id} refetchUsers={refetchUsers} />
+        );
       })}
     </ul>
   );
 }
 
-export function UserCard({ user }: { user: User, refetchUsers: () => void }) {
+export function UserCard({
+  user,
+  refetchUsers,
+}: {
+  user: User;
+  refetchUsers: () => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  const hendeleDelete = async () => {
+    startTransition(async () => {
+      await deleteUser(user.id);
+      refetchUsers();
+    });
+  };
   return (
     <li>
       <span>{user.email}</span>
-      <button type="button">delete</button>
+      <button onClick={hendeleDelete} type="button" disabled={isPending}>
+        delete
+      </button>
     </li>
   );
 }
